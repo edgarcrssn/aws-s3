@@ -3,6 +3,7 @@ import {
   S3Client,
   ListObjectsV2Command,
   GetObjectCommand,
+  DeleteObjectCommand,
 } from '@aws-sdk/client-s3';
 
 const S3_BUCKET: string = import.meta.env.VITE_S3_BUCKET;
@@ -61,13 +62,13 @@ export const FileList: React.FC = () => {
   }, []);
 
   const downloadFile = async (key: string) => {
-    const command = new GetObjectCommand({
-      Bucket: S3_BUCKET,
-      Key: key,
-    });
-
     try {
-      const response = await client.send(command);
+      const response = await client.send(
+        new GetObjectCommand({
+          Bucket: S3_BUCKET,
+          Key: key,
+        })
+      );
       const str = await response.Body?.transformToString();
       console.log(str);
 
@@ -85,6 +86,18 @@ export const FileList: React.FC = () => {
     }
   };
 
+  const deleteFile = async (key: string) => {
+    try {
+      const data = await client.send(
+        new DeleteObjectCommand({ Bucket: S3_BUCKET, Key: key })
+      );
+      console.log('Success. Object deleted.', data);
+      return data; // For unit tests.
+    } catch (err) {
+      console.log('Error', err);
+    }
+  };
+
   return (
     <div>
       <h2>Liste des fichiers dans le bucket</h2>
@@ -95,6 +108,9 @@ export const FileList: React.FC = () => {
             {file.LastModified?.toLocaleString()}
             <button onClick={() => downloadFile(file.Key || '')}>
               Télécharger
+            </button>
+            <button onClick={() => deleteFile(file.Key || '')}>
+              Supprimer
             </button>
           </li>
         ))}
