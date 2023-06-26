@@ -5,6 +5,13 @@ import {
   GetObjectCommand,
   DeleteObjectCommand,
 } from '@aws-sdk/client-s3';
+import { Button, Card, Popconfirm } from 'antd';
+import styles from './FileList.module.scss';
+import {
+  DeleteOutlined,
+  DownloadOutlined,
+  WarningOutlined,
+} from '@ant-design/icons';
 
 const S3_BUCKET: string = import.meta.env.VITE_S3_BUCKET;
 const REGION: string = import.meta.env.VITE_REGION;
@@ -99,22 +106,41 @@ export const FileList: React.FC = () => {
   };
 
   return (
-    <div>
-      <h2>Liste des fichiers dans le bucket</h2>
-      <ul>
+    <section className={styles.fileList}>
+      <h2>Bucket files list</h2>
+      <ul className={styles.list}>
         {fileList.map((file, index) => (
-          <li key={index}>
-            {file.Key} - {file.Size} octets -{' '}
-            {file.LastModified?.toLocaleString()}
-            <button onClick={() => downloadFile(file.Key || '')}>
-              Télécharger
-            </button>
-            <button onClick={() => deleteFile(file.Key || '')}>
-              Supprimer
-            </button>
+          <li key={index} className={styles.item}>
+            <Card
+              title={file.Key}
+              actions={[
+                <Button
+                  icon={<DownloadOutlined />}
+                  onClick={() => downloadFile(file.Key || '')}
+                >
+                  Download
+                </Button>,
+                <Popconfirm
+                  icon={<WarningOutlined style={{ color: 'red' }} />}
+                  title="Delete the file"
+                  description="Are you sure to delete this file?"
+                  onConfirm={() => deleteFile(file.Key || '')}
+                  okText="Yes"
+                  cancelText="No"
+                >
+                  <Button icon={<DeleteOutlined />} danger>
+                    Delete
+                  </Button>
+                </Popconfirm>,
+              ]}
+            >
+              <em>Size:</em> {file.Size} Byte(s)
+              <br />
+              <em>Date:</em> {file.LastModified?.toLocaleString()}
+            </Card>
           </li>
         ))}
       </ul>
-    </div>
+    </section>
   );
 };

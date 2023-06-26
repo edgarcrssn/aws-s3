@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { Button } from 'antd';
+import styles from './FileUploader.module.scss';
 
 const S3_BUCKET: string = import.meta.env.VITE_S3_BUCKET;
 const REGION: string = import.meta.env.VITE_REGION;
@@ -17,8 +19,7 @@ const client = new S3Client({
 export const FileUploader: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
 
-  const handleFileSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const handleFileSubmit = async () => {
     if (!file) return;
 
     const command = new PutObjectCommand({
@@ -36,13 +37,15 @@ export const FileUploader: React.FC = () => {
   };
 
   return (
-    <form onSubmit={handleFileSubmit}>
+    <form onSubmit={handleFileSubmit} className={styles.fileUploader}>
       <h2>Upload</h2>
-      <input
-        type="file"
-        onChange={(e) => setFile(e.target.files?.[0] || null)}
-      />
-      <button type="submit">Upload</button>
+      <div className={styles.flex}>
+        <input
+          type="file"
+          onChange={(e) => setFile(e.target.files?.[0] || null)}
+        />
+        <Button onClick={handleFileSubmit}>Upload</Button>
+      </div>
     </form>
   );
 };

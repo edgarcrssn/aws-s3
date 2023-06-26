@@ -1,0 +1,14 @@
+.fileUploader {
+  input[type="file"] {
+    height: 8rem;
+    width: 12rem;
+    border-radius: .25rem;
+    border: 1px dashed black;
+  }
+
+  .flex {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+}
