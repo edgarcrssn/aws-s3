@@ -1,11 +1,13 @@
 import './App.css';
-
-const caca = import.meta.env.REACT_APP_S3_BUCKET;
+import { FileUploader } from './components/FileUploader/FileUploader';
 
 function App() {
-  console.log(caca);
-
-  return <>Quoicoubaka</>;
+  return (
+    <>
+      <h1>S3 AWS</h1>
+      <FileUploader />
+    </>
+  );
 }
 
 export default App;
