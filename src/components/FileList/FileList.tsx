@@ -54,11 +54,7 @@ export const FileList = ({ refreshCount }: Props) => {
           Key: c.Key,
           LastModified: c.LastModified,
           Size: c.Size,
-        })).sort((a, b) => {
-          const dateA = new Date(a.LastModified);
-          const dateB = new Date(b.LastModified);
-          return dateA.getTime() - dateB.getTime();
-        }) || [];
+        })) || [];
 
       setFileList(currentContents);
     } catch (error) {
