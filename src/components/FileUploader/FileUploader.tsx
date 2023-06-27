@@ -16,7 +16,11 @@ const client = new S3Client({
   },
 });
 
-export const FileUploader: React.FC = () => {
+interface Props {
+  setRefreshCount: React.Dispatch<React.SetStateAction<number>>;
+}
+
+export const FileUploader = ({ setRefreshCount }: Props) => {
   const [file, setFile] = useState<File | null>(null);
 
   const handleFileSubmit = async () => {
@@ -31,6 +35,7 @@ export const FileUploader: React.FC = () => {
     try {
       const response = await client.send(command);
       console.log('Fichier uploadé avec succès :', response);
+      setRefreshCount((prev) => prev + 1);
     } catch (error) {
       console.error("Erreur lors de l'upload du fichier :", error);
     }
@@ -44,6 +49,7 @@ export const FileUploader: React.FC = () => {
           type="file"
           onChange={(e) => setFile(e.target.files?.[0] || null)}
         />
+        {file ? file.name : null}
         <Button onClick={handleFileSubmit}>Upload</Button>
       </div>
     </form>

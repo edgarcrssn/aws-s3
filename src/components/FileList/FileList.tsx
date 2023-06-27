@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+import { saveAs } from 'file-saver';
 import {
   S3Client,
   ListObjectsV2Command,
@@ -32,41 +33,45 @@ interface IFile {
   Size?: number;
 }
 
-export const FileList: React.FC = () => {
+interface Props {
+  refreshCount: number;
+}
+
+export const FileList = ({ refreshCount }: Props) => {
   const [fileList, setFileList] = useState<IFile[]>([]);
 
+  const fetchFileList = async () => {
+    const command = new ListObjectsV2Command({
+      Bucket: S3_BUCKET,
+      MaxKeys: 1000,
+    });
+
+    try {
+      const response = await client.send(command);
+
+      const currentContents =
+        response.Contents?.map((c) => ({
+          Key: c.Key,
+          LastModified: c.LastModified,
+          Size: c.Size,
+        })).sort((a, b) => {
+          const dateA = new Date(a.LastModified);
+          const dateB = new Date(b.LastModified);
+          return dateA.getTime() - dateB.getTime();
+        }) || [];
+
+      setFileList(currentContents);
+    } catch (error) {
+      console.error(
+        'Erreur lors de la récupération de la liste des fichiers :',
+        error
+      );
+    }
+  };
+
   useEffect(() => {
-    const fetchFileList = async () => {
-      const command = new ListObjectsV2Command({
-        Bucket: S3_BUCKET,
-        MaxKeys: 1000,
-      });
-
-      try {
-        const response = await client.send(command);
-
-        const currentContents =
-          response.Contents?.map((c) => ({
-            Key: c.Key,
-            LastModified: c.LastModified,
-            Size: c.Size,
-          })).sort((a, b) => {
-            const dateA = new Date(a.LastModified);
-            const dateB = new Date(b.LastModified);
-            return dateA.getTime() - dateB.getTime();
-          }) || [];
-
-        setFileList(currentContents);
-      } catch (error) {
-        console.error(
-          'Erreur lors de la récupération de la liste des fichiers :',
-          error
-        );
-      }
-    };
-
     fetchFileList();
-  }, []);
+  }, [refreshCount]);
 
   const downloadFile = async (key: string) => {
     try {
@@ -76,18 +81,16 @@ export const FileList: React.FC = () => {
           Key: key,
         })
       );
-      const str = await response.Body?.transformToString();
-      console.log(str);
 
-      if (!str) return;
+      const res = await response.Body?.transformToByteArray();
 
-      const blob = new Blob([str], { type: 'text/plain' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = key;
-      link.click();
-      URL.revokeObjectURL(url);
+      if (!res) return;
+
+      const blob = new Blob([res], { type: 'application/octet-stream' });
+
+      saveAs(blob, key);
+
+      console.log('Téléchargement du fichier démarré.');
     } catch (err) {
       console.error(err);
     }
@@ -99,6 +102,7 @@ export const FileList: React.FC = () => {
         new DeleteObjectCommand({ Bucket: S3_BUCKET, Key: key })
       );
       console.log('Success. Object deleted.', data);
+      fetchFileList();
       return data; // For unit tests.
     } catch (err) {
       console.log('Error', err);
